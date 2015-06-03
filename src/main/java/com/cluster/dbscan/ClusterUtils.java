@@ -16,10 +16,15 @@ import com.entity.ClusterResultEntity;
 import com.entity.MessageEntity;
 import com.entity.PointCountEntity;
 
+/**
+ * 聚类辅助函数类
+ * @author Dx
+ *
+ */
 public class ClusterUtils {
 
 	//地球半径
-	private static double EARTH_RADIUS = 6378137;//单位:米
+	private static final double EARTH_RADIUS = 6378137;//单位:米
 	/**
 	 * 获取两点间地球距
 	 * @param 坐标1
@@ -41,6 +46,13 @@ public class ClusterUtils {
 	private static double rad(double d) {
 		return d * Math.PI / 180.0;
 	}
+	
+	/**
+	 * 获取两点之间的距离,用于测试
+	 * @param p
+	 * @param q
+	 * @return
+	 */
 	public static double getDistance(Point p,Point q) {
 		double dx = p.x - q.x;
 		double dy = p.y - q.y;
@@ -130,6 +142,8 @@ public class ClusterUtils {
 	public static ClusterResultEntity buildClusterEntity(Vector<Vector<Point>> vector) {
 		List<PointCountEntity> list = new ArrayList<PointCountEntity>();
 		for(Vector<Point> v : vector) {
+			//利用当前“簇”中的第一个点的坐标作为该“簇”中心点
+			//TODO: 寻找中心点的更优方法
 			Point p = v.get(0);
 			PointCountEntity pointCountEntity = new PointCountEntity(p,v.size());
 			list.add(pointCountEntity);

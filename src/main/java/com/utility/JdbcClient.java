@@ -10,16 +10,16 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * JDBC链接类,可实例化多个
+ * JDBC链接类,可实例化多个,每个实例代表一个连接
  * @author Dx
  *
  */
 public class JdbcClient {
-	/*
+	/**
 	 * 日志
 	 */
 	private static final Log LOGGER = LogFactory.getLog(JdbcClient.class);
-	/*
+	/**
 	 * 全局配置
 	 */
 	private static Conf conf = Conf.getInstance();

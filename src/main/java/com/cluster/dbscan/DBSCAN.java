@@ -6,6 +6,13 @@ import java.util.Vector;
 
 import com.entity.MessageEntity;
 
+/**
+ * DBSCAN聚类算法入口
+ * 该类用于对车辆GPS点集进行聚类分析
+ * TODO:考虑构建R-tree和并行DBSCAN优化聚类速度
+ * @author Dx
+ *
+ */
 public class DBSCAN {
 	/**
 	 * 簇扫描半径
@@ -38,6 +45,10 @@ public class DBSCAN {
 		pointList = ClusterUtils.getListFromMsgEntityVector(messageEntities);
 	}
 	
+	/**
+	 * 入口函数
+	 * @return 聚类结果
+	 */
 	public Vector<Vector<Point>> applyDBSCAN() {
 		for(int i=0;i<pointList.size();i++) {
 			Point p = pointList.get(i);

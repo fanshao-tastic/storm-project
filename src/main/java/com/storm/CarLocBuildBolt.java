@@ -30,25 +30,32 @@ import backtype.storm.tuple.Values;
  */
 public class CarLocBuildBolt implements IBasicBolt {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 824574675781571237L;
+	/**
+	 * 全局配置
+	 */
 	private static Conf conf = Conf.getInstance();
-	/*
+	/**
 	 * TickTuple发射频率
 	 */
 	private int emitFrequencyInSeconds = conf.getEmitFrequencyInSeconds();
-	/*
+	/**
 	 * 存放<carId,msgEntity>,用于保存车辆信息的时间切片
 	 */
 	// TODO:考虑在多线程情况下的Map的线程安全问题！
 	private Map<String, MessageEntity> currentCarInfoMap = new HashMap<String, MessageEntity>();
-	/*
+	/**
 	 * 时间格式化
 	 */
 	private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-	/*
+	/**
 	 * 发射流的StreamId
 	 */
 	private String streamId = "MessageEntity";
-	/*
+	/**
 	 * 增量计数器
 	 */
 	private int incrementCount = 0;
@@ -60,6 +67,7 @@ public class CarLocBuildBolt implements IBasicBolt {
 
 	public Map<String, Object> getComponentConfiguration() {
 		Map<String, Object> conf = new HashMap<String, Object>();
+		//设置TickTuple的频率
 	    conf.put(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, emitFrequencyInSeconds);
 	    return conf;
 	}
@@ -69,7 +77,7 @@ public class CarLocBuildBolt implements IBasicBolt {
 //			System.out.println("========isTickTuple========");
 			if(incrementCount != 0) {//有新增数据才进行聚类
 				incrementCount = 0;//计数器清零
-				System.out.println("====================CarLocBuildBolt========================");
+				//用集合封装车辆消息实体对象,传递给下游
 				Vector<MessageEntity> vector = new Vector<MessageEntity>();
 				for(Entry<String, MessageEntity> entity: currentCarInfoMap.entrySet()) {
 					vector.add(entity.getValue());
@@ -78,6 +86,7 @@ public class CarLocBuildBolt implements IBasicBolt {
 			}
 		} else {
 			String[] messages = tuple.getString(0).split(conf.getColumnDelimiter());
+			//key:当前车辆的id(唯一),value:当前车况消息实体对象
 			currentCarInfoMap.put(messages[conf.getPrimaryKeyIndex()], buildEntity(messages));
 			incrementCount++;
 		}

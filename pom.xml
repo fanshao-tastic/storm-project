@@ -16,6 +16,7 @@
 
 	<build>
 		<plugins>
+			<!-- 
 			<plugin>
 				<artifactId>maven-assembly-plugin</artifactId>
 				<configuration>
@@ -26,7 +27,33 @@
 					</archive>
 					<descriptorRefs>
 						<descriptorRef>jar-with-dependencies</descriptorRef>
-					</descriptorRefs>
+					</descriptorRefs> 
+				</configuration>
+			</plugin>
+			-->
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				
+						<configuration>
+							<archive>
+								<manifest>
+									<mainClass>com.storm.Main</mainClass>
+								</manifest>
+							</archive>
+							<descriptors> <!--描述文件路径-->  
+		                          <descriptor>src/main/resources/assembly-jar.xml</descriptor>  
+		                          <descriptor>src/main/resources/assembly-filecopy.xml</descriptor>  
+		                    </descriptors>  
+						</configuration>
+					
+			</plugin>
+			<!-- javadoc -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>2.6.1</version>
+				<configuration>
+					<encoding>UTF-8</encoding>
 				</configuration>
 			</plugin>
 		</plugins>
@@ -87,10 +114,8 @@
 					<groupId>org.apache.zookeeper</groupId>
 					<artifactId>zookeeper</artifactId>
 				</exclusion>
-				<exclusion>
-					<groupId>log4j</groupId>
-					<artifactId>log4j</artifactId>
-				</exclusion>
+				<!-- <exclusion> <groupId>log4j</groupId> <artifactId>log4j</artifactId> 
+					</exclusion> -->
 			</exclusions>
 		</dependency>
 		<dependency>

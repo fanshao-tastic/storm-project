@@ -7,12 +7,24 @@ import kafka.producer.KeyedMessage;
 import kafka.producer.ProducerConfig;
 
 import com.utility.Conf;
-
+/**
+ * 该类用于对kafka的producer进行封装
+ * @author Dx
+ *
+ */
 public class KafkaProducer {
 
+	/**
+	 * 全局配置
+	 */
 	private Conf conf = Conf.getInstance();
-	
+	/**
+	 * kafka-broker的topic
+	 */
 	private String topic;
+	/**
+	 * 定义kafka-producer
+	 */
 	private Producer<String, String> producer;
 	
 	public KafkaProducer() {

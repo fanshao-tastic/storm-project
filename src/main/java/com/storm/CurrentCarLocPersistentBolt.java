@@ -19,50 +19,62 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Tuple;
 
 /**
- * 用于将当前收到的最新车辆信息更新到Redis和Mysql中
+ * 用于将当前收到的最新车辆信息更新到Redis和持久化到Mysql中
  * @author Dx
  *
  */
 public class CurrentCarLocPersistentBolt implements IBasicBolt {
 	
-	/*
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7442352964942376281L;
+	/**
 	 * 日志
 	 */
 	private static final Log LOGGER = LogFactory.getLog(CurrentCarLocPersistentBolt.class);
-	/*
+	/**
 	 * 全局配置
 	 */
 	private static Conf conf = Conf.getInstance();
-	/*
+	/**
 	 * Redis配置
 	 */
 	private Jedis jedisClient;
-	private String redisHost = conf.getRedisHost();
-	private int redisPort = conf.getRedisPort();
 	/*
 	 * 持久化数据库配置
 	 */
 	private JdbcClient jdbcClient;
 	private PreparedStatement statement;
+	
+	/**
+	 * 定义一次持久化的batch的大小
+	 */
 	private int batchSize = conf.getBatchSize();//每隔conf.getBatchSize(),进行一次批量插入
+	/**
+	 * 当前batch的大小
+	 */
 	private int currentSize = 0;
-	private int roundCount = 0;
-
-	public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
+	
+	public void prepare(Map map, TopologyContext context) {
+		jedisClient = new Jedis(conf.getRedisHost(), conf.getRedisPort());
+		LOGGER.info(Thread.currentThread().getName()+" [RedisCurrentCarLocBolt] get Redis connection successful!");
+		jdbcClient = new JdbcClient();
+		//预定义插入操作的sql语句格式
+		String preStatementSql = "insert into "+conf.getCarGPSLogTableName()+" set "
+				+ "ID=?,CompanyID=?,VehicleSimID=?,GPSTime=?,GPSLongitude=?,GPSLatitude=?,"
+				+ "GPSSpeed=?,GPSDirection=?,PassengerState=?,ReadFlag=?,CreateDate=?";
+		try {
+			statement = jdbcClient.getPreparedStatement(preStatementSql);
+		} catch (SQLException e) {
+			LOGGER.error(Thread.currentThread().getName()+" statement error!");
+			e.printStackTrace();
+		}
+		LOGGER.info(Thread.currentThread().getName()+" [RedisCurrentCarLocBolt] get JDBC connection successful!");
 	}
 
 	public Map<String, Object> getComponentConfiguration() {
 		return null;
-	}
-
-	public void cleanup() {
-		jedisClient.close();
-		try {
-			statement.executeBatch();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-//		jdbcClient.close();
 	}
 
 	public void execute(Tuple tuple, BasicOutputCollector collector) {
@@ -77,7 +89,7 @@ public class CurrentCarLocPersistentBolt implements IBasicBolt {
 	}
 
 	/**
-	 * 批量导入方式
+	 * 批量插入方式
 	 * 从tuple字符串中构建插入表中的sql语句(和表结构相关!)
 	 * @param message
 	 */
@@ -98,7 +110,6 @@ public class CurrentCarLocPersistentBolt implements IBasicBolt {
 				}
 				statement.addBatch();
 				statement.executeBatch();
-				System.out.println("executeBatch"+" "+roundCount++);
 			} catch (SQLException e) {
 			}
 			currentSize = 0; 
@@ -106,7 +117,7 @@ public class CurrentCarLocPersistentBolt implements IBasicBolt {
 	}
 
 	/**
-	 * 单条导入方式
+	 * 单条插入方式(不推荐)
 	 * 从tuple字符串中构建插入表中的sql语句(和表结构相关!)
 	 * @param message
 	 * @return
@@ -124,19 +135,17 @@ public class CurrentCarLocPersistentBolt implements IBasicBolt {
 		} catch (Exception e) {
 		}
 	}
-
-	public void prepare(Map map, TopologyContext context) {
-		jedisClient = new Jedis(redisHost, redisPort);
-		jdbcClient = new JdbcClient();
-		String preStatementSql = "insert into "+conf.getCarGPSLogTableName()+" set "
-				+ "ID=?,CompanyID=?,VehicleSimID=?,GPSTime=?,GPSLongitude=?,GPSLatitude=?,"
-				+ "GPSSpeed=?,GPSDirection=?,PassengerState=?,ReadFlag=?,CreateDate=?";
+	
+	public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
+	}
+	
+	public void cleanup() {
+		jedisClient.close();
 		try {
-			statement = jdbcClient.getPreparedStatement(preStatementSql);
+			statement.executeBatch();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		LOGGER.info(Thread.currentThread().getName()+" [RedisCurrentCarLocBolt] get Redis connection successful!");
+//		jdbcClient.close();
 	}
-
 }

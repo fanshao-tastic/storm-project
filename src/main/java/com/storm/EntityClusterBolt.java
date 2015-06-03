@@ -21,16 +21,19 @@ import backtype.storm.tuple.Values;
 
 import com.cluster.dbscan.ClusterUtils;
 import com.cluster.dbscan.DBSCAN;
+import com.cluster.dbscan.Point;
 import com.entity.ClusterResultEntity;
 import com.entity.ClusterResultPersistentEntity;
 import com.entity.MessageEntity;
 import com.google.gson.Gson;
 import com.utility.Conf;
-import com.cluster.dbscan.Point;
 
 /**
  * 该Bolt用于从上一个Bolt中传来的Vector取出车辆数据
- * 并将该数据集进行聚类(非分布式聚类)
+ * 并将该数据集进行聚类(当前版本:非分布式聚类)
+ * 该类会发射两条流:
+ * 1)字符串型,直接将persistentEntity转换为json字符串,用于交给下游的RedisPubBolt进行推送
+ * 2)persistentEntity对象类型
  * @author Dx
  *
  */
@@ -40,31 +43,40 @@ public class EntityClusterBolt implements IBasicBolt {
 	 * 
 	 */
 	private static final long serialVersionUID = 4202712485219421275L;
+	/**
+	 * log
+	 */
 	private static final Log LOGGER = LogFactory.getLog(EntityClusterBolt.class);
-
+	/**
+	 * 全局配置
+	 */
 	private static Conf conf = Conf.getInstance();
+	/**
+	 * 定义string类型的流的名称
+	 */
 	private String outputStringStream = conf.getEntityClusterBoltOutputStreamStr();
+	/**
+	 * 定义obj类型的流的名称
+	 */
 	private String outputObjectStream = conf.getEntityClusterBoltOutputStreamObj();
 	
 	private Gson gson;
-	
-	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declareStream(outputStringStream, new Fields(outputStringStream));
-		declarer.declareStream(outputObjectStream, new Fields(outputObjectStream));
-	}
 
+	public void prepare(Map map, TopologyContext context) {
+		gson = new Gson();
+		LOGGER.info(Thread.currentThread().getName()+" [EntityClusterBolt] get Redis connection successful!");
+	}
+	
 	public Map<String, Object> getComponentConfiguration() {
 		return null;
 	}
 
-	public void cleanup() {
-	}
-
 	public void execute(Tuple tuple,BasicOutputCollector collector) {
-		System.out.println("====================EntityClusterBolt========================");
 		Vector<MessageEntity> entityVector = (Vector<MessageEntity>) tuple.getValue(0);
-		DBSCAN dbscan = new DBSCAN(entityVector, 60, 10);//Dbscan聚类
+		//Dbscan聚类
+		DBSCAN dbscan = new DBSCAN(entityVector, conf.getEps(), conf.getMinPts());
 		Vector<Vector<Point>> vector = dbscan.applyDBSCAN();
+		//从聚类结果构造聚类结果实体对象
 		ClusterResultEntity entity = ClusterUtils.buildClusterEntity(vector);
 		try {
 			ClusterResultPersistentEntity persistentEntity = 
@@ -73,30 +85,13 @@ public class EntityClusterBolt implements IBasicBolt {
 			collector.emit(outputObjectStream, new Values(persistentEntity));
 		} catch (Exception e) {
 		}
-		
-//		System.out.println(dbscan.resultList.size());
-//		System.out.println(gson.toJson(entity));
-//		jedisClient.publish(conf.getRedisChannel(), gson.toJson(entity));
-		
-//		for(List<Point> list : dbscan.resultList) {
-//			System.out.println("第"+(round++)+"簇为:");
-//			for(Point p : list) {
-//				System.out.println(p.x+","+p.y);
-//			}
-//		}
-//		round = 1;
-//		Map<String, MessageEntity> tupleMap =Collections.synchronizedMap((Map<String, MessageEntity>) tuple.getValue(0));
-//		Vector<MessageEntity> vector = new Vector<MessageEntity>();
-//		for(Entry<String, MessageEntity> entity: tupleMap.entrySet()) {
-//			vector.add(entity.getValue());
-//		}
-//		System.out.println(vector);
-//		System.out.println(tupleMap.get("806584099170"));
 	}
 
-	public void prepare(Map map, TopologyContext context) {
-		gson = new Gson();
-		LOGGER.info(Thread.currentThread().getName()+" [EntityClusterBolt] get Redis connection successful!");
+	public void declareOutputFields(OutputFieldsDeclarer declarer) {
+		declarer.declareStream(outputStringStream, new Fields(outputStringStream));
+		declarer.declareStream(outputObjectStream, new Fields(outputObjectStream));
 	}
-
+	
+	public void cleanup() {
+	}
 }

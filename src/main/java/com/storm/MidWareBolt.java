@@ -10,20 +10,27 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 
+/**
+ * 该bolt用于将收到的tuple直接转发给下游,用于测试
+ * @author Dx
+ *
+ */
 public class MidWareBolt implements IBasicBolt {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 8833527586092263301L;
 
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
 		declarer.declare(new Fields("midle"));
 	}
 
 	public Map<String, Object> getComponentConfiguration() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	public void cleanup() {
-		// TODO Auto-generated method stub
-
 	}
 
 	public void execute(Tuple tuple, BasicOutputCollector collector) {
@@ -31,7 +38,6 @@ public class MidWareBolt implements IBasicBolt {
 	}
 
 	public void prepare(Map map, TopologyContext context) {
-		// TODO Auto-generated method stub
 	}
 
 }

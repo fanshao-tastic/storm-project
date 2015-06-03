@@ -10,7 +10,7 @@ import java.util.List;
  */
 public class ClusterResultEntity {
 
-	/*
+	/**
 	 * 聚类结果
 	 */
 	public List<PointCountEntity> ClusterResult;

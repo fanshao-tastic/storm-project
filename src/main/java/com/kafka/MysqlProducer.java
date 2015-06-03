@@ -6,28 +6,36 @@ import java.sql.SQLException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.utility.Conf;
 import com.utility.JdbcClient;
 
 public class MysqlProducer {
 
+	/**
+	 * log
+	 */
 	private static final Log LOGGER = LogFactory.getLog(MysqlProducer.class);
-	/*
+	/**
+	 * 全局配置
+	 */
+	private static Conf conf = Conf.getInstance();
+	/**
 	 * kafkaProducer
 	 */
 	private KafkaProducer kafkaProducer = new KafkaProducer();
-	/*
+	/**
 	 * 待导入的表名
 	 */
 	private String tableName;
-	/*
+	/**
 	 * JdbcClient
 	 */
 	private JdbcClient jdbcClient = new JdbcClient();
-	/*
+	/**
 	 * 一次取出的数据量
 	 */
-	private int batchBlock = 10000;
-	/*
+	private int batchBlock = conf.getBatchBlock();
+	/**
 	 * 设置是否有order by 命令标志位
 	 */
 	private String orderBy = null;
@@ -47,25 +55,26 @@ public class MysqlProducer {
 			int begin = i;
 			int end = i+batchBlock;
 			if(orderBy == null) {
-				sql = "select * from "+tableName+" limit "+begin+","+end;
+				sql = "select * from "+tableName+" limit "+begin+","+batchBlock;
 			} else {
-				sql = "select * from "+tableName+" order by "+orderBy+" limit "+begin+","+end;
+				sql = "select * from "+tableName+" order by "+orderBy+" limit "+begin+","+batchBlock;
 			}
 			executeQueryBatch(sql, columnNums);
 			LOGGER.debug(Thread.currentThread().getName()+" has sent "+i+" messages");
+			//两次batch直接间隔时间,配合batchBlock的大小,用于模拟实时的效果
 			try {
-				Thread.sleep(2000);
+				Thread.sleep(conf.getSleepMilliSecond());
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 		}
-		sql = "select * from "+tableName+" limit "+i+","+rowNums;
+		sql = "select * from "+tableName+" limit "+i+","+batchBlock;
 		executeQueryBatch(sql, columnNums);
 		LOGGER.info(Thread.currentThread().getName()+" has sent "+rowNums+" messages");
 	}
 	/**
 	 * 获取表格列数
-	 * @return
+	 * @return 表的列数
 	 */
 	private int getColumnNums() {
 		String sql = "select * from "+tableName+" limit 1";
@@ -73,7 +82,7 @@ public class MysqlProducer {
 		try {
 			ResultSet resultSet = jdbcClient.executeQuery(sql);
 			columnNums = resultSet.getMetaData().getColumnCount();
-			LOGGER.info("The table "+tableName+"has "+columnNums+" columnNums");
+			LOGGER.info("The table "+tableName+" has "+columnNums+" columnNums");
 		} catch (SQLException e) {
 			LOGGER.error("execute "+sql+" error!");
 			e.printStackTrace();
@@ -83,7 +92,7 @@ public class MysqlProducer {
 	
 	/**
 	 * 获取全部行数
-	 * @return
+	 * @return 表的行数
 	 */
 	private int getRowNums() {
 		String sql = "select count(*) from "+tableName;
@@ -92,7 +101,7 @@ public class MysqlProducer {
 			ResultSet resultSet = jdbcClient.executeQuery(sql);
 			resultSet.next();
 			rowNums = resultSet.getInt(1);
-			LOGGER.info("The table "+tableName+"has "+rowNums+" rowNums");
+			LOGGER.info("The table "+tableName+" has "+rowNums+" rowNums");
 		} catch (SQLException e) {
 			LOGGER.error("execute "+sql+" error!");
 			e.printStackTrace();
@@ -114,12 +123,13 @@ public class MysqlProducer {
 	        		strBuffer.append(resultSet.getString(i)).append(",");
 	        	}
 	        	strBuffer.append(resultSet.getString(i));
-	        	System.out.println(strBuffer);
+	        	//打印测试
+	        	//System.out.println(strBuffer);
 	        	kafkaProducer.send(strBuffer.toString());
 	        	strBuffer.delete(0, strBuffer.length());
 			}
 		} catch (SQLException e) {
-			LOGGER.error("execute batchQuery "+sql+"error!");
+			LOGGER.error("execute batchQuery "+sql+" error!");
 			e.printStackTrace();
 		}
 	}

@@ -9,13 +9,16 @@ import java.util.Date;
  */
 public class ClusterResultPersistentEntity {
 	
+	/**
+	 * 聚类结果
+	 */
 	ClusterResultEntity clusterResultEntity;
-	/*
+	/**
 	 * GPS时间
 	 */
 	public Date GPSTime;
 
-	/*
+	/**
 	 * 创建该条记录时间
 	 */
 	public Date CreateTime = new Date();

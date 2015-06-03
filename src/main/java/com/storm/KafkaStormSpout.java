@@ -11,20 +11,25 @@ import backtype.storm.topology.TopologyBuilder;
 
 import com.utility.Conf;
 
+/**
+ * 该类用于配置并封装kafka-Spout
+ * @author Dx
+ *
+ */
 public class KafkaStormSpout {
-	/*
+	/**
 	 * 全局配置
 	 */
 	private static Conf conf = Conf.getInstance();
-	/*
+	/**
 	 * kafkaTopic
 	 */
 	private String kafkaTopic;
-	/*
+	/**
 	 * zookeeper hosts
 	 */
 	private ZkHosts zkHosts;
-	/*
+	/**
 	 * Spout config
 	 */
 	SpoutConfig spoutConf;
@@ -34,9 +39,9 @@ public class KafkaStormSpout {
 		zkHosts = new ZkHosts(conf.getZkHosts());
 		
 		spoutConf = new SpoutConfig(zkHosts, kafkaTopic, "/"+kafkaTopic, UUID.randomUUID().toString());
-		spoutConf.zkPort = 2181;
+		spoutConf.zkPort = conf.getZkPort();
 		spoutConf.zkServers = conf.getZkServers();
-		spoutConf.forceFromStart = true;	//从头开始消费
+		spoutConf.forceFromStart = conf.isForceFromStart();	//从头开始消费
 		spoutConf.socketTimeoutMs = 60 * 1000;
 		spoutConf.scheme = new SchemeAsMultiScheme(new StringScheme()); //定义输出为String类型
 	}
