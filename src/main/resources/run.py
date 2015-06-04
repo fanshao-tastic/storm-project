@@ -9,12 +9,13 @@ import ConfigParser
 import PropertiesHelper
 import commands
 
-
+projectName = 'storm-project'
 
 def main():
     usage = "Usage: %prog [options] --start or --stop"
     parser = OptionParser(usage)
     parser.add_option('-d','--debug',action='store_true',dest='debug',default=False,help='whether to open stdout console message')
+    parser.add_option('-v','--verbose',action='store_true',dest='verbose',default=False,help='whether to open stdout console message')
     parser.add_option('--start',action="store_true",dest="status",help="start the project")
     parser.add_option('--stop',action="store_false",dest="status",help="stop the project")
     (options,args) = parser.parse_args(sys.argv)
@@ -24,7 +25,7 @@ def main():
     if options.status: #start
         start(options)
     else: #stop
-        stop()
+        stop(options)
         
 def start(options):
     if os.path.exists(os.path.join(sys.path[0],'pid.lock')):
@@ -40,11 +41,12 @@ def start(options):
         kafkaBroker = properties['kafkaBrokeList'].split(':')[0]
         zookeeper = properties['zkHosts']
         sourceTableName = properties['sourceTableName']
+        # check kafka topic exist
         cmd = 'ssh '+kafkaBroker+' "/usr/hdp/current/kafka-broker/bin/kafka-topics.sh --list --zookeeper '+zookeeper+'" | grep '+kafkaTopic
         printCmd(cmd)
         (status,output) = commands.getstatusoutput(cmd)
         if (status == 0) and (output == kafkaTopic):
-            print "kafka topic:"+kafkaTopic+" is already created! Going to launch the project!"
+            print "kafka topic:["+kafkaTopic+"] is already created! Going to launch the project!"
         else:
             print "kafka topic isn't created , going to create the topic:"+kafkaTopic+"..."
             cmd = 'ssh '+kafkaBroker+' "/usr/hdp/current/kafka-broker/bin/kafka-topics.sh --create --zookeeper '+zookeeper+' --replication-factor 1 --partitions 3 --topic '+kafkaTopic+'"'
@@ -56,10 +58,34 @@ def start(options):
             else:
                 print "kafka topic create failed!"
                 sys.exit()
+        # get jar name
+        jarName = commands.getstatusoutput("ls | grep jar-with-dependencies.jar")[1]
+        print "the target jar name is ["+jarName+"]"
+        # Copy the config file to Storm Supervisor host
+        if not options.debug:
+            supervisorHosts = properties['supervisorHost']
+            print "Copy the config file to Storm Supervisor host:"+supervisorHosts
+            for supervisorHost in supervisorHosts.split(','):
+                cmd = 'ssh '+supervisorHost+' "mkdir -p /etc/storm/storm-project" && scp config/conf.properties '+supervisorHost+':/etc/storm/storm-project'
+                (status,output) = commands.getstatusoutput(cmd)
+                printCmd(cmd)
+                print output
+                if(status != 0):
+                    sys.exit()
+        cmd = 'mkdir -p /etc/storm/storm-project && cp config/conf.properties /etc/storm/storm-project'
+        (status,output) = commands.getstatusoutput(cmd)
+        printCmd(cmd)
+        print output
+        if(status != 0):
+            sys.exit()
         # define the shell cmd!!
-        kafkaCmd = "java -cp StormProject-1.0-SNAPSHOT-jar-with-dependencies.jar com.kafka.ProducerMain "+sourceTableName
-        stormCmd = "storm jar StormProject-1.0-SNAPSHOT-jar-with-dependencies.jar com.storm.Main"
-        if (options.debug):
+        if options.debug :#local mode
+            stormCmd = "storm jar "+jarName+" com.storm.Main"
+        else:#cluster mode
+            stormCmd = "storm jar "+jarName+" com.storm.Main "+projectName
+        kafkaCmd = "java -cp "+jarName+" com.kafka.ProducerMain "+sourceTableName
+        
+        if (options.verbose):
             kafkaProducerProcess = subprocess.Popen(kafkaCmd,shell=True)
             stormMainProcess = subprocess.Popen(stormCmd,shell=True)
         else:
@@ -70,22 +96,29 @@ def start(options):
         pidLockFile = ConfigParser.ConfigParser()
         pidLockFile.add_section('Exist Task Pid')
         pidLockFile.set('Exist Task Pid','kafkaProducerProcess',kafkaProducerProcess.pid)
-        pidLockFile.set('Exist Task Pid','stormMainProcess',stormMainProcess.pid)
+        if options.debug:
+            pidLockFile.set('Exist Task Pid','stormMainProcess',stormMainProcess.pid)
         with open('pid.lock','wb') as lockfile:
             pidLockFile.write(lockfile)
-        print "the child process is " + str(kafkaProducerProcess.pid)
-        print "the child process is " + str(stormMainProcess.pid)
-        print "Projece start successful!"
+        print "the KafkaProducer process PID is " + str(kafkaProducerProcess.pid)
+        if options.debug:
+            print "the Storm process in debug mode is " + str(stormMainProcess.pid)
+        else:
+            print "the Storm process is submitted to cluster"
+        print "Project start successful!"
     
-def stop():
+def stop(options):
     lockFilePath = os.path.join(sys.path[0],'pid.lock')
     if os.path.exists(lockFilePath):
         pidLockFile = ConfigParser.ConfigParser()
         pidLockFile.read('pid.lock')
+        if options.debug:
+            stormMainProcessPid = pidLockFile.get('Exist Task Pid','stormMainProcess')
+            stormCmd = "kill -9 "+str(stormMainProcessPid)
+        else:
+            stormCmd = "storm kill "+projectName
         kafkaProducerProcessPid = pidLockFile.get('Exist Task Pid','kafkaProducerProcess')
-        stormMainProcessPid = pidLockFile.get('Exist Task Pid','stormMainProcess')
         kafkaCmd = "kill -9 "+str(kafkaProducerProcessPid)
-        stormCmd = "kill -9 "+str(stormMainProcessPid)
         subprocess.call(kafkaCmd,shell=True)
         subprocess.call(stormCmd,shell=True)
         os.remove(lockFilePath)

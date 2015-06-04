@@ -1,5 +1,7 @@
 package com.entity;
 
+import java.io.Serializable;
+
 import com.cluster.dbscan.Point;
 /**
  * 该类用于定义聚类结果中,每一个“簇”的数据结构
@@ -7,7 +9,7 @@ import com.cluster.dbscan.Point;
  * @author Dx
  *
  */
-public class PointCountEntity {
+public class PointCountEntity implements Serializable{
 
 	/**
 	 * 该簇中心点的经度

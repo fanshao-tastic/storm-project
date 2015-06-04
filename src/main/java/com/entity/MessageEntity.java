@@ -1,5 +1,6 @@
 package com.entity;
 
+import java.io.Serializable;
 import java.util.Date;
 
 /**
@@ -7,7 +8,7 @@ import java.util.Date;
  * @author Dx
  *
  */
-public class MessageEntity {
+public class MessageEntity implements Serializable{
 
 	/**
 	 * 该条信息ID

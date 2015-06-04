@@ -80,8 +80,9 @@ public class Conf {
 	private final int minPts;// = 10;//最小包含点数阈值
 	
 	private Conf() {
-		String baseDirectory = System.getProperty("user.dir");
-		String confFile = baseDirectory + "/config/conf.properties";
+//		String baseDirectory = System.getProperty("user.dir");
+//		String confFile = baseDirectory + "/config/conf.properties";
+		String confFile = "/etc/storm/storm-project/conf.properties";
 		Properties prop = new Properties();
 		try {
 		      FileInputStream in = new FileInputStream(confFile);

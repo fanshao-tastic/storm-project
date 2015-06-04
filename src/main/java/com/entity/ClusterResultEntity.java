@@ -1,5 +1,6 @@
 package com.entity;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
@@ -8,7 +9,7 @@ import java.util.List;
  * @author Dx
  *
  */
-public class ClusterResultEntity {
+public class ClusterResultEntity implements Serializable{
 
 	/**
 	 * 聚类结果
