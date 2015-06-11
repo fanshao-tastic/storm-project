@@ -78,6 +78,14 @@ def start(options):
         print output
         if(status != 0):
             sys.exit()
+        #truncate mysql table    
+        cmd = 'mysql -h qxmanager -uroot -proot < sql/create-table.sql'
+        (status,output) = commands.getstatusoutput(cmd)
+        printCmd(cmd)
+        print output
+        if(status != 0):
+            print 'execute cmd failed , please check the mysql onnection'
+            sys.exit()
         # define the shell cmd!!
         if options.debug :#local mode
             stormCmd = "storm jar "+jarName+" com.storm.Main"

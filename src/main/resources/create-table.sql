@@ -1,9 +1,13 @@
+use test;
+
 create table if not exists ClusterResult ( 
 ID int(12) not null auto_increment, 
 GPSTime timestamp(14), 
 CreateTime timestamp(14), 
 ClusterResult varchar(4000), 
 primary key(ID));
+
+truncate table ClusterResult;
 
 create table if not exists CarGPSLog (
 ID int(11),
@@ -18,3 +22,5 @@ PassengerState int(11),
 ReadFlag int(11),
 CreateDate timestamp(14)
 );
+
+truncate table CarGPSLog;
