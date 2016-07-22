@@ -2,7 +2,7 @@ package com.cluster.dbscan;
 
 /**
  * 该类用于GPS坐标转换到百度坐标
- * 
+ * date7.21
  */
 public class CoordTransform {
 	//定义一些常量
