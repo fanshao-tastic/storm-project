@@ -99,8 +99,8 @@ public class MysqlProducer {
 		int rowNums = 0;
 		try {
 			ResultSet resultSet = jdbcClient.executeQuery(sql);
-			resultSet.next();
-			rowNums = resultSet.getInt(1);
+			resultSet.next();//next将光标从当前位置向前移一行
+			rowNums = resultSet.getInt(1);// 以 Java 编程语言中 int 的形式获取此 ResultSet 对象的当前行中指定列的值
 			LOGGER.info("The table "+tableName+" has "+rowNums+" rowNums");
 		} catch (SQLException e) {
 			LOGGER.error("execute "+sql+" error!");

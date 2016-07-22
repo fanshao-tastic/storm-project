@@ -18,13 +18,15 @@ public class JdbcClient {
 	/**
 	 * 日志
 	 */
-	private static final Log LOGGER = LogFactory.getLog(JdbcClient.class);
+	 private static final Log LOGGER = LogFactory.getLog(JdbcClient.class);
 	/**
 	 * 全局配置
 	 */
 	private static Conf conf = Conf.getInstance();
-
+	
+	//Connection与特定数据库的连接（会话）。在连接上下文中执行 SQL 语句并返回结果
 	private Connection conn;
+	//SQL 语句被预编译并存储在 PreparedStatement 对象中。然后可以使用此对象多次高效地执行该语句
 	private PreparedStatement statement;
 	/*
 	 * 加载jdbc driver
@@ -51,6 +53,7 @@ public class JdbcClient {
 	 */
 	public Connection getConnection() throws SQLException {
 		try {
+			//DriverManager管理一组 JDBC 驱动程序的基本服务
 			Connection conn = DriverManager.getConnection(conf.getMySqlHost(),conf.getMySqlUser(),conf.getMySqlPassword());
 			return conn;
 		} catch (SQLException e) {
@@ -61,6 +64,7 @@ public class JdbcClient {
 	
 	public PreparedStatement getPreparedStatement(String sql) throws SQLException {
 		return conn.prepareStatement(sql);
+		//创建一个 PreparedStatement 对象来将参数化的 SQL 语句发送到数据库
 	}
 	/**
 	 * 执行sql查询
@@ -73,6 +77,7 @@ public class JdbcClient {
 		try {
 			statement = conn.prepareStatement(sql);
 			return statement.executeQuery();
+			//executeQuery:在此 PreparedStatement 对象中执行 SQL 查询，并返回该查询生成的 ResultSet 对象
 		} catch (SQLException e) {
 			LOGGER.error(e.fillInStackTrace());
 			throw new SQLException(Thread.currentThread().getName()+" fail to excute Query:"+sql);

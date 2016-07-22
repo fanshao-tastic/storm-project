@@ -67,12 +67,14 @@ public class EntityClusterBolt implements IBasicBolt {
 		LOGGER.info(Thread.currentThread().getName()+" [EntityClusterBolt] get Redis connection successful!");
 	}
 	
+	//getComponentConfiguration方法允许你配置此组件怎样运行的多个aspect
 	public Map<String, Object> getComponentConfiguration() {
 		return null;
 	}
 
 	public void execute(Tuple tuple,BasicOutputCollector collector) {
 		Vector<MessageEntity> entityVector = (Vector<MessageEntity>) tuple.getValue(0);
+		
 		//Dbscan聚类
 		DBSCAN dbscan = new DBSCAN(entityVector, conf.getEps(), conf.getMinPts());
 		Vector<Vector<Point>> vector = dbscan.applyDBSCAN();
@@ -88,8 +90,8 @@ public class EntityClusterBolt implements IBasicBolt {
 	}
 
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declareStream(outputStringStream, new Fields(outputStringStream));
-		declarer.declareStream(outputObjectStream, new Fields(outputObjectStream));
+		declarer.declareStream(outputStringStream, new Fields("outputStringStream"));
+		declarer.declareStream(outputObjectStream, new Fields("outputObjectStream"));
 	}
 	
 	public void cleanup() {

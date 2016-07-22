@@ -23,13 +23,13 @@ public class testJdbcClient {
 	@Test
 	public void testExecuteQuery() {
 		
-		String sql = "select * from VehicleData20100901 limit 1";
+		String sql = "select * from SourceDate limit 1";
 		SimpleDateFormat dataFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         ResultSet resultSet;
         try {
 			resultSet = client.executeQuery(sql);
 			int cloumnNums = resultSet.getMetaData().getColumnCount();
-			sql = "select * from VehicleData20100901 limit 2";
+			sql = "select * from SourceDate limit 2";
 			StringBuffer strBuffer = new StringBuffer();
 			resultSet = client.executeQuery(sql);
 			while(resultSet.next()) {
@@ -47,16 +47,17 @@ public class testJdbcClient {
 		}
 	}
 	
-//	@Test
+	@Test
 	public void testQueryCount() {
 		System.out.println("==============");
-		String sql = "select count(*) from VehicleData20100901";
+		String sql = "select count(*) from SourceDate";
 		try {
 			ResultSet resultSet = client.executeQuery(sql);
 			resultSet.next();
 			int rownums = resultSet.getInt(1);
+			System.out.println(rownums);
 			int block = 100000;//查询的分页大小
-			sql = "select * from VehicleData20100901 limit 1";
+			sql = "select * from SourceDate limit 1";
 			resultSet = client.executeQuery(sql);
 			int cloumnNums = resultSet.getMetaData().getColumnCount();
 			System.out.println(cloumnNums);

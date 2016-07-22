@@ -36,6 +36,8 @@ public class Conf {
 	 */
 	private final String columnDelimiter;// = ",";
 	private final int primaryKeyIndex;// = 2;
+	private final int primaryLngIndex;// = 4;
+	private final int primaryLatIndex;// = 5;
 	/*
 	 * kafka配置
 	 */
@@ -81,8 +83,9 @@ public class Conf {
 	
 	private Conf() {
 //		String baseDirectory = System.getProperty("user.dir");
-//		String confFile = baseDirectory + "/config/conf.properties";
+	//	String confFile = "D:\\www\\storm_app2\\StormProject\\src\\main\\resources\\conf.properties";
 		String confFile = "/etc/storm/storm-project/conf.properties";
+		//Properties 类表示了一个持久的属性集。Properties 可保存在流中或从流中加载
 		Properties prop = new Properties();
 		try {
 		      FileInputStream in = new FileInputStream(confFile);
@@ -94,10 +97,10 @@ public class Conf {
 		    }
 		//===db config===
 		JdbcDriver = prop.getProperty("JdbcDriver","com.mysql.jdbc.Driver");
-		MySqlHost = prop.getProperty("MySqlHost","jdbc:mysql://192.168.100.158:3306/test");
-		MySqlUser = prop.getProperty("MySqlUser","root");
-		MySqlPassword = prop.getProperty("MySqlPassword","root");
-		sourceTableName = prop.getProperty("sourceTableName","VehicleData20100901");
+		MySqlHost = prop.getProperty("MySqlHost","jdbc:mysql://172.16.197.206:3306/test");
+		MySqlUser = prop.getProperty("MySqlUser","hive");
+		MySqlPassword = prop.getProperty("MySqlPassword","hive");
+		sourceTableName = prop.getProperty("sourceTableName","SourceData");
 		ClusterResultTableName = prop.getProperty("ClusterResultTableName","ClusterResult");
 		ClusterResultColGPSTime = prop.getProperty("ClusterResultColGPSTime","GPSTime");
 		ClusterResultColCreateTime = prop.getProperty("ClusterResultColCreateTime","CreateTime");
@@ -106,6 +109,8 @@ public class Conf {
 		batchSize = Integer.parseInt(prop.getProperty("batchSize","100"));
 		columnDelimiter = prop.getProperty("columnDelimiter",",");
 		primaryKeyIndex = Integer.parseInt(prop.getProperty("primaryKeyIndex","2"));
+		primaryLngIndex = Integer.parseInt(prop.getProperty("primaryLngIndex","4"));
+		primaryLatIndex = Integer.parseInt(prop.getProperty("primaryLatIndex","5"));
 		//===kafka config===
 		zkHosts = prop.getProperty("zkHosts");
 		zkPort = Integer.valueOf(prop.getProperty("zkPort","2181"));
@@ -194,7 +199,12 @@ public class Conf {
 	public int getPrimaryKeyIndex() {
 		return primaryKeyIndex;
 	}
-	
+	public int getPrimaryLngIndex() {
+		return primaryLngIndex;
+	}
+	public int getPrimaryLatIndex() {
+		return primaryLatIndex;
+	}
 	public String getZkHosts() {
 		return zkHosts;
 	}

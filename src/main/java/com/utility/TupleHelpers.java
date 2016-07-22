@@ -18,6 +18,7 @@ public final class TupleHelpers {
    * @param tuple
    * @return
    */
+  //通过Tuple.getSourceComponent方法来判断来自哪个组件
   public static boolean isTickTuple(Tuple tuple) {
     return tuple.getSourceComponent().equals(Constants.SYSTEM_COMPONENT_ID) && tuple.getSourceStreamId().equals(
         Constants.SYSTEM_TICK_STREAM_ID);

@@ -38,10 +38,12 @@ public class KafkaStormSpout {
 		kafkaTopic = conf.getTopic();
 		zkHosts = new ZkHosts(conf.getZkHosts());
 		
-		spoutConf = new SpoutConfig(zkHosts, kafkaTopic, "/"+kafkaTopic, UUID.randomUUID().toString());
+		spoutConf = new SpoutConfig(zkHosts, kafkaTopic, "/"+kafkaTopic, "kafka-storm");
 		spoutConf.zkPort = conf.getZkPort();
 		spoutConf.zkServers = conf.getZkServers();
-		spoutConf.forceFromStart = conf.isForceFromStart();	//从头开始消费
+//		spoutConf.startOffsetTime = kafka.api.OffsetRequest.LatestTime();
+		spoutConf.startOffsetTime = System.currentTimeMillis();
+//		spoutConf.forceFromStart = conf.isForceFromStart();	//从头开始消费
 		spoutConf.socketTimeoutMs = 60 * 1000;
 		spoutConf.scheme = new SchemeAsMultiScheme(new StringScheme()); //定义输出为String类型
 	}

@@ -9,6 +9,8 @@ import org.apache.commons.logging.LogFactory;
 
 import redis.clients.jedis.Jedis;
 
+import com.cluster.dbscan.CoordTransform;
+import com.cluster.dbscan.Point;
 import com.utility.Conf;
 import com.utility.JdbcClient;
 
@@ -81,11 +83,25 @@ public class CurrentCarLocPersistentBolt implements IBasicBolt {
 		String tupleString = tuple.getString(0);
 		String[] message = tupleString.split(conf.getColumnDelimiter());
 		String carId = message[conf.getPrimaryKeyIndex()];
+		double lng=Double.parseDouble(message[conf.getPrimaryLngIndex()]);
+		double lat=Double.parseDouble(message[conf.getPrimaryLatIndex()]);
 		//更新redis表
-		jedisClient.hset(conf.getRedisCurrentCarLocMap(),carId,tupleString);
+	//	jedisClient.hset(conf.getRedisCurrentCarLocMap(),carId,tupleString);
+		
+		//坐标转换
+		CoordTransform coordTransform=new CoordTransform();
+		Point point=null;
+		point=coordTransform.wgs84tobd09(lng,lat);
+		if(point!=null){
+		message[conf.getPrimaryLngIndex()]=Double.toString(point.x);
+		message[conf.getPrimaryLatIndex()]=Double.toString(point.y);
+		
 		//batch方式持久化到数据库
 		insertBatchToDB(message);
 		//insertToDB(message);
+		}else{
+			;
+		}
 	}
 
 	/**

@@ -67,7 +67,7 @@ public class CarLocBuildBolt implements IBasicBolt {
 
 	public Map<String, Object> getComponentConfiguration() {
 		Map<String, Object> conf = new HashMap<String, Object>();
-		//设置TickTuple的频率
+		//设置TickTuple的频率，只需要通过isTickTuple来判断是否为tickTuple, 就可以完成定时触发的功能
 	    conf.put(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, emitFrequencyInSeconds);
 	    return conf;
 	}
